@@ -160,5 +160,7 @@ cython_debug/
 .idea/
 
 # data folder
-data/
-	!data/.gitkeep
+data/*
+!data/.gitkeep
+!data/electric-saw-aka-pandemia.wav
+!data/annoyed-big-dog-barking.wav

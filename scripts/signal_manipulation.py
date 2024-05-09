@@ -7,7 +7,7 @@ import librosa
 
 def add_gaussian_noise(
     input_dir: str, output_dir: str, noise_tuple: tuple[int, int | float]
-):
+) -> None:
     """
     Function walks through the input directory and adds gaussian noise according to passed tuple of loc, scale.
     Function writes .wav files into the output directory, creating the same directories structure and adding to original name "_loc_{loc}_scale_{scale}.wav"
@@ -38,7 +38,7 @@ def add_gaussian_noise(
             sf.write(file=noise_filename, data=signal_noise, samplerate=sample_rate)
 
 
-def random_amplitude_multiply(input_dir: str, output_dir: str):
+def random_amplitude_multiply(input_dir: str, output_dir: str) -> None:
     """
     Function walks through the input directory and multiplies amplitude according to random choice from factors {25, 1, 0.04}
     Function writes .wav files into the output directory, creating the same directories structure and adding to original name "_amp_{scale_factor}.wav", where scale_factor is chosen factor.
@@ -71,7 +71,7 @@ def random_amplitude_multiply(input_dir: str, output_dir: str):
 
 def change_sampling_rate(
     input_dir: str, output_dir: str, sampling_rate_factor: float = 0.5
-):
+) -> None:
     """
     Function walks through the input directory and changes the sampling rate according to provided factor
     Function writes .wav files into the output directory, creating the same directories structure and adding to \
@@ -79,7 +79,6 @@ def change_sampling_rate(
     :param input_dir: Directory from which .wav files should be read
     :param output_dir: Directory to which .wav files should be written
     :param sampling_rate_factor: Sampling rate that .wav file should be resampled into
-    :return:
     """
     for dirpath, dirnames, filenames in tqdm(
         os.walk(input_dir),
@@ -106,3 +105,47 @@ def change_sampling_rate(
             sf.write(
                 file=noise_filename, data=data_resampled, samplerate=target_samplerate
             )
+
+
+def add_irregular_sound(
+    input_dir: str,
+    output_dir: str,
+    disturbance_signal_path: str = os.path.join(
+        "..", "data", "electric-saw-aka-pandemia.wav"
+    ),
+) -> None:
+    """
+    Function walks through the input directory and adds disturbance signal pandemic sound - electric saw while renovation by default.
+    Function writes .wav files into the output directory, creating the same directories structure and adding to \
+    original name "_irregular_signal.wav".
+    :param input_dir: Directory from which .wav files should be read
+    :param output_dir: Directory to which .wav files should be written
+    :param disturbance_signal_path: Signal that should be added to .wav files as irregular sound
+    """
+
+    disturbance_signal, disturbance_sample_rate = sf.read(disturbance_signal_path)
+    if len(disturbance_signal.shape) != 1:
+        disturbance_signal = np.mean(disturbance_signal, axis=1)
+    for dirpath, dirnames, filenames in os.walk(input_dir):
+        structure = os.path.join(output_dir, os.path.relpath(dirpath, input_dir))
+        if not os.path.isdir(structure):  # create the same structure
+            os.mkdir(structure)
+        for name in filenames:
+            filename = str(os.path.join(dirpath, name))
+            noise_filename = os.path.join(
+                structure, f"{name[:-4:]}_irregular_signal.wav"
+            )
+
+            signal, sample_rate = sf.read(filename)
+
+            disturbance_signal = (
+                0.5 * np.max(signal) * disturbance_signal / np.max(disturbance_signal)
+            )
+
+            repeats = np.ceil(len(signal) / len(disturbance_signal)).astype(int)
+            disturbance_signal = np.tile(disturbance_signal, repeats)
+            disturbance_signal = disturbance_signal[: len(signal)]
+
+            signal_modified = signal + disturbance_signal
+
+            sf.write(file=noise_filename, data=signal_modified, samplerate=sample_rate)
