@@ -63,10 +63,15 @@ class VoiceRecognitionSystem:
             audio_path=user_voice_path
         ).values()
 
-        is_access_granted = user_name == predicted_user_name
+        is_access_granted = (
+            user_name == predicted_user_name and confidence >= self.acceptance_threshold
+        )
         if self.allow_brute_force:
             system_user_names = os.listdir(self.authorized_users_path)
-            is_access_granted = predicted_user_name in system_user_names
+            is_access_granted = (
+                predicted_user_name in system_user_names
+                and confidence >= self.acceptance_threshold
+            )
 
         return is_access_granted, confidence
 
