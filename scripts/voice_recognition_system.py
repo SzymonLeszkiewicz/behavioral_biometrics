@@ -29,7 +29,7 @@ class VoiceRecognitionSystem:
 
     def initialize_model(self):
         model = wespeaker.load_model("english")
-        model.set_gpu(0)
+        model.set_gpu(-1)
         return model
 
     def initialize_database(self) -> None:
