@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+import torch.cuda
 import wespeaker
 from tqdm import tqdm
 
@@ -29,7 +30,8 @@ class VoiceRecognitionSystem:
 
     def initialize_model(self):
         model = wespeaker.load_model("english")
-        model.set_gpu(-1)
+        device_id = torch.cuda.current_device() if torch.cuda.is_available() else -1
+        model.set_gpu(device_id)
         return model
 
     def initialize_database(self) -> None:
@@ -68,11 +70,15 @@ class VoiceRecognitionSystem:
         )
         if self.allow_brute_force:
             system_user_names = os.listdir(self.authorized_users_path)
+
+            if user_name in system_user_names:
+                system_user_names.remove(user_name)
+
             is_access_granted = (
                 predicted_user_name in system_user_names
                 and confidence >= self.acceptance_threshold
             )
-
+            
         return is_access_granted, confidence
 
     def verify_multiple_users(self, incoming_users_path: str):
