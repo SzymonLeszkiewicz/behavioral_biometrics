@@ -201,20 +201,48 @@ def prepare_experiment_4(
     shutil.rmtree(os.path.join(experiment_path, "unauthorized_temp"))
 
 
-# def prep_exp5(
-#     dir_name,
-#     sound_path: str = os.path.join("..", "data", "electric-saw-aka-pandemia.wav"),
-# ):
-#     """do 100 probek dodaj nieregularne zakłócenia"""
-#     if not os.path.exists(os.path.join("..", "data", dir_name)):
-#         os.mkdir(os.path.join("..", "data", dir_name))
-#     r_wavs = draw_x_authorized(100)
-#     copy_fies(r_wavs, os.path.join("..", "data", dir_name + "temp"))
-#     signal_manipulation.add_irregular_sound(
-#         os.path.join("..", "data", dir_name + "temp"),
-#         os.path.join("..", "data", dir_name),
-#         sound_path,
-#     )
-#     shutil.rmtree(
-#         os.path.join("..", "data", dir_name + "temp")
-#     )  # remove temp directory
+def prepare_experiment_5(
+    experiment_path: str,
+    authorized_users_path: str,
+    unauthorized_users_path: str,
+    number_of_users: int,
+    irregular_noise_path: str,
+):
+    """
+    Add irregular noise
+    """
+    random_audio_files_authorized = draw_number_of_users(
+        authorized_users_path, number_of_users
+    )
+    random_audio_files_unauthorized = draw_number_of_users(
+        unauthorized_users_path, number_of_users
+    )
+    copy_files(
+        random_audio_files_authorized, os.path.join(experiment_path, "authorized_temp")
+    )
+    copy_files(
+        random_audio_files_unauthorized,
+        os.path.join(experiment_path, "unauthorized_temp"),
+    )
+
+    noise_authorized_directory = os.path.join(experiment_path, "authorized")
+    noise_unauthorized_directory = os.path.join(experiment_path, "unauthorized")
+
+    if not os.path.exists(noise_authorized_directory):
+        os.makedirs(noise_authorized_directory, exist_ok=True)
+    if not os.path.exists(noise_unauthorized_directory):
+        os.makedirs(noise_unauthorized_directory, exist_ok=True)
+
+    signal_manipulation.add_irregular_sound(
+        os.path.join(experiment_path, "authorized_temp"),
+        noise_authorized_directory,
+        irregular_noise_path,
+    )
+    signal_manipulation.add_irregular_sound(
+        os.path.join(experiment_path, "unauthorized_temp"),
+        noise_unauthorized_directory,
+        irregular_noise_path,
+    )
+    # remove temporary directories
+    shutil.rmtree(os.path.join(experiment_path, "authorized_temp"))
+    shutil.rmtree(os.path.join(experiment_path, "unauthorized_temp"))
