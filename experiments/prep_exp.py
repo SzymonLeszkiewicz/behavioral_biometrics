@@ -24,6 +24,25 @@ def draw_x_authorized(x):
     return r_wavs
 
 
+def draw_x_unauthorized(x):
+    unauthorized = os.path.join('..', 'data', 'database', 'incoming_users', 'unauthorized_users')
+    unauthorized_ids = os.listdir(unauthorized)
+    if '.DS_Store' in unauthorized_ids:
+        unauthorized_ids.remove('.DS_Store')
+
+    unauthorized_wavs = []
+    for i in unauthorized_ids:
+        for j in os.listdir(os.path.join(unauthorized, i)):
+            if j.endswith('.wav'):
+                unauthorized_wavs.append(os.path.join(unauthorized, i, j))
+    r_wavs = []
+    for i in range(x):
+        r_wavs.append(np.random.choice(unauthorized_wavs))
+    # r_wavs = ['../data/database/incoming_users/unauthorized_users/id10004/lu_eVSfv3Tg_00034.wav',
+    #           ... ]
+    return r_wavs
+
+
 def copy_fies(r_wavs, exp_dir):
     for i in r_wavs:
         head = os.path.split(i)[0]
@@ -57,7 +76,10 @@ def prep_exp3(dir_name):
     '''dla 200 probek zmiejsz czestotliwocs probek'''
 
     resample_rates = [0.5, 0.2, 0.1]
-    r_wavs = draw_x_authorized(200)
+    x_wavs_auth = draw_x_authorized(100)
+    x_wavs_unauth = draw_x_unauthorized(100)
+    r_wavs = x_wavs_auth + x_wavs_unauth
+
     copy_fies(r_wavs, os.path.join('..', 'data', dir_name + 'temp'))
     dirs_i = []
     for i in resample_rates:
@@ -72,7 +94,9 @@ def prep_exp3(dir_name):
 
 def prep_exp4(dir_name):
     '''do 100 probek dodaj szum'''
-    r_wavs = draw_x_authorized(100)
+    x_wavs_auth = draw_x_authorized(50)
+    x_wavs_unauth = draw_x_unauthorized(50)
+    r_wavs = x_wavs_auth + x_wavs_unauth
     copy_fies(r_wavs, os.path.join('..', 'data', dir_name + 'temp'))
     scal = [(0, 1), (0, 10), (5, 1)]
     dirs_i = []
@@ -90,7 +114,9 @@ def prep_exp5(dir_name, sound_path: str = os.path.join("..", "data", "electric-s
     '''do 100 probek dodaj nieregularne zakłócenia'''
     if not os.path.exists(os.path.join('..', 'data', dir_name)):
         os.mkdir(os.path.join('..', 'data', dir_name))
-    r_wavs = draw_x_authorized(100)
+    x_wavs_auth = draw_x_authorized(50)
+    x_wavs_unauth = draw_x_unauthorized(50)
+    r_wavs = x_wavs_auth + x_wavs_unauth
     copy_fies(r_wavs, os.path.join('..', 'data', dir_name + 'temp'))
     add_irregular_sound(os.path.join('..', 'data', dir_name + 'temp'), os.path.join('..', 'data', dir_name), sound_path)
     shutil.rmtree(os.path.join('..', 'data', dir_name + 'temp'))  # remove temp directory
