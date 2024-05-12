@@ -148,32 +148,59 @@ def prepare_experiment_3(
     shutil.rmtree(os.path.join(experiment_path, "unauthorized_temp"))
 
 
-# def prepare_experiment_4(
-#     experiment_path: str, authorized_users_path: str, number_of_users: int = 100
-# ):
-#     """do 100 probek dodaj szum"""
-#     random_audio_files = draw_number_of_users_authorized(
-#         authorized_users_path, number_of_users
-#     )
-#     copy_files(random_audio_files, experiment_path + "_temp")
-#     scal = [(0, 1), (0, 10), (5, 1)]
-#     dirs_i = []
-#     for i in scal:
-#         dir_i = dir_name + f"_amp_{i[0]}_{i[1]}"
-#         dirs_i.append(os.path.join("..", "data", dir_i))
-#         if not os.path.exists(os.path.join("..", "data", dir_i)):
-#             os.mkdir(os.path.join("..", "data", dir_i))
-#         signal_manipulation.add_gaussian_noise(
-#             os.path.join("..", "data", dir_name + "temp"),
-#             os.path.join("..", "data", dir_i),
-#             i,
-#         )
-#     shutil.rmtree(
-#         os.path.join("..", "data", dir_name + "temp")
-#     )  # remove temp directory
-#     return dirs_i
-#
-#
+def prepare_experiment_4(
+    experiment_path: str,
+    authorized_users_path: str,
+    unauthorized_users_path: str,
+    number_of_users: int = 100,
+):
+    """
+    Add noise
+    """
+    noise_tuples = [(0, 1), (0, 10), (5, 1)]
+
+    random_audio_files_authorized = draw_number_of_users(
+        authorized_users_path, number_of_users
+    )
+    random_audio_files_unauthorized = draw_number_of_users(
+        unauthorized_users_path, number_of_users
+    )
+    copy_files(
+        random_audio_files_authorized, os.path.join(experiment_path, "authorized_temp")
+    )
+    copy_files(
+        random_audio_files_unauthorized,
+        os.path.join(experiment_path, "unauthorized_temp"),
+    )
+
+    for noise_tuple in noise_tuples:
+        noise_authorized_directory = os.path.join(
+            experiment_path, f"noise_{noise_tuple}", "authorized"
+        )
+        noise_unauthorized_directory = os.path.join(
+            experiment_path, f"noise_{noise_tuple}", "unauthorized"
+        )
+
+        if not os.path.exists(noise_authorized_directory):
+            os.makedirs(noise_authorized_directory, exist_ok=True)
+        if not os.path.exists(noise_unauthorized_directory):
+            os.makedirs(noise_unauthorized_directory, exist_ok=True)
+
+        signal_manipulation.add_gaussian_noise(
+            os.path.join(experiment_path, "authorized_temp"),
+            noise_authorized_directory,
+            noise_tuple,
+        )
+        signal_manipulation.add_gaussian_noise(
+            os.path.join(experiment_path, "unauthorized_temp"),
+            noise_unauthorized_directory,
+            noise_tuple,
+        )
+    # remove temporary directories
+    shutil.rmtree(os.path.join(experiment_path, "authorized_temp"))
+    shutil.rmtree(os.path.join(experiment_path, "unauthorized_temp"))
+
+
 # def prep_exp5(
 #     dir_name,
 #     sound_path: str = os.path.join("..", "data", "electric-saw-aka-pandemia.wav"),
