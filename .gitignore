@@ -164,3 +164,7 @@ data/*
 !data/.gitkeep
 !data/electric-saw-aka-pandemia.wav
 !data/annoyed-big-dog-barking.wav
+
+# results folder
+results/*
+!results/.gitkeep
