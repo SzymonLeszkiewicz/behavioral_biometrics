@@ -19,14 +19,15 @@ def draw_x_authorized(x):
     r_wavs = []
     for i in range(x):
         r_wavs.append(np.random.choice(authorized_wavs))
-
+    # r_wavs = ['../data/database/incoming_users/authorized_users/id10004/lu_eVSfv3Tg_00034.wav',
+    #           ... ]
     return r_wavs
 
 
 def copy_fies(r_wavs, exp_dir):
     for i in r_wavs:
-        # copy file to exp_dir/authorized_users/user_id
-        user_id = i.split('/')[-2]
+        head = os.path.split(i)[0]
+        user_id = os.path.split(head)[1]
         if not os.path.exists(os.path.join(exp_dir, user_id)):
             os.makedirs(os.path.join(exp_dir, user_id))
         shutil.copy(i, os.path.join(exp_dir, user_id))
@@ -84,7 +85,8 @@ def prep_exp4(dir_name):
     shutil.rmtree(os.path.join('..', 'data', dir_name + 'temp'))  # remove temp directory
     return dirs_i
 
-def prep_exp5(dir_name, sound_path : str = os.path.join("..", "data", "electric-saw-aka-pandemia.wav")):
+
+def prep_exp5(dir_name, sound_path: str = os.path.join("..", "data", "electric-saw-aka-pandemia.wav")):
     '''do 100 probek dodaj nieregularne zakłócenia'''
     if not os.path.exists(os.path.join('..', 'data', dir_name)):
         os.mkdir(os.path.join('..', 'data', dir_name))
