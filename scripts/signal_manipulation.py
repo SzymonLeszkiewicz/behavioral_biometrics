@@ -3,6 +3,8 @@ import numpy as np
 import soundfile as sf
 from tqdm.auto import tqdm
 import librosa
+from scipy.io import wavfile
+from scipy.signal import butter, lfilter
 
 
 def add_gaussian_noise(
@@ -36,6 +38,57 @@ def add_gaussian_noise(
             noise = np.random.normal(loc=loc, scale=scale, size=signal.shape[0])
             signal_noise = signal + noise
             sf.write(file=noise_filename, data=signal_noise, samplerate=sample_rate)
+
+
+def butter_lowpass(cutoff, fs, order=5):
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = butter(order, normal_cutoff, btype="low", analog=False)
+    return b, a
+
+
+def lowpass_filter(data, cutoff, fs, order=5):
+    b, a = butter_lowpass(cutoff, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
+
+
+def add_gaussian_noise_with_lowpass(
+    input_dir: str, output_dir: str, noise_tuple: tuple[int, int | float]
+) -> None:
+    """
+    Function walks through the input directory and adds gaussian noise according to passed tuple of loc, scale. \
+    After that, it tries to filter out noise.
+    Function writes .wav files into the output directory, creating the same directories structure and adding to original \
+    name "_loc_{loc}_scale_{scale}_lowpass_filer.wav"
+    :param input_dir: Directory from which .wav files should be from
+    :param output_dir: Directory to which noised .wav files should be written
+    :param noise_tuple: Tuple of loc, scale Gaussian noise
+    """
+    loc, scale = noise_tuple
+    for dirpath, dirnames, filenames in tqdm(
+        os.walk(input_dir),
+        desc="Users computed",
+        colour="magenta",
+        total=len(os.listdir(input_dir)),
+        leave=False,
+    ):
+        structure = os.path.join(output_dir, os.path.relpath(dirpath, input_dir))
+        if not os.path.isdir(structure):  # create the same structure
+            os.mkdir(structure)
+        for name in filenames:
+            filename = str(os.path.join(dirpath, name))
+            noise_filename = os.path.join(
+                structure, f"{name[:-4:]}_loc_{loc}_scale_{scale}_lowpass_filer.wav"
+            )
+            signal, sample_rate = sf.read(filename)
+
+            noise = np.random.normal(loc=loc, scale=scale, size=signal.shape[0])
+            signal_noise = signal + noise
+
+            filtered_data = lowpass_filter(signal_noise, 1000, sample_rate)
+
+            sf.write(file=noise_filename, data=filtered_data, samplerate=sample_rate)
 
 
 def random_amplitude_multiply(input_dir: str, output_dir: str) -> None:
