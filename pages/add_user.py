@@ -17,7 +17,7 @@ def add_user_voice(user_name, user_voice):
     path = os.path.join(user_directory_path, user_voice.name)
     with open(path, "wb") as f:
         f.write(user_voice.read())
-
+    face_verification_system.initialize_database()
 
 st.title("Add User")
 st.header("Please enter your username and upload your voice")

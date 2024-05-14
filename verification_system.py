@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(
     page_title="System Overview",
-    page_icon="👁️",
+    page_icon="🎤",
 )
 
 st.write("# Welcome to Voice Verification System! 👋")
