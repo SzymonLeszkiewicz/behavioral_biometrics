@@ -38,7 +38,7 @@ def play_user_rec(user_name: str):
 
 st.title("Verify User")
 voice_ver_system = VoiceRecognitionSystem(
-    database_path=os.path.join('..', "data", "database")
+    database_path=os.path.join("data", "database")
 )
 
 st.header("Please enter your username and upload your voice")

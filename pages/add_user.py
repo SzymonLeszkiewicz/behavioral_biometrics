@@ -8,7 +8,7 @@ st.set_page_config(page_title="Add User", page_icon="🎤️")
 
 
 def add_user_voice(user_name, user_voice):
-    user_directory_path = os.path.join('..',
+    user_directory_path = os.path.join(
                                        "data", "database", "authorized_users", user_name
                                        )
     if not os.path.exists(user_directory_path):
@@ -22,12 +22,12 @@ def add_user_voice(user_name, user_voice):
 st.title("Add User")
 st.header("Please enter your username and upload your voice")
 face_verification_system = VoiceRecognitionSystem(
-    database_path=os.path.join('..', "data", "database"))
+    database_path=os.path.join( "data", "database"))
 
 uploaded_name = st.text_input(label="Username").lower()
 
 if uploaded_name:
-    user_directory_path = os.path.join('..',
+    user_directory_path = os.path.join(
                                        "data", "database", "authorized_users", uploaded_name
                                        )
     if os.path.exists(user_directory_path):
