@@ -6,9 +6,7 @@ import streamlit as st
 from PIL import Image
 import os
 
-grand_parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-if grand_parent_dir not in sys.path:
-    sys.path.append(grand_parent_dir)
+
 from scripts import VoiceRecognitionSystem
 
 st.set_page_config(page_title="Verify User", page_icon="🎤️")
