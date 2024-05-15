@@ -1,6 +1,6 @@
 import os
 from typing import Tuple
-from glob import glob
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -8,17 +8,16 @@ import torch.cuda
 import wespeaker
 from sklearn.metrics import roc_curve, confusion_matrix
 from tqdm import tqdm
-import pickle
 
 
 class VoiceRecognitionSystem:
     def __init__(
-            self,
-            database_path: str,
-            database_embeddings_path: str = None,
-            acceptance_threshold: float = 0.5,
-            enable_multiple_audio_file_system: bool = False,
-            allow_brute_force: bool = False,
+        self,
+        database_path: str,
+        database_embeddings_path: str = None,
+        acceptance_threshold: float = 0.5,
+        enable_multiple_audio_file_system: bool = False,
+        allow_brute_force: bool = False,
     ):
         self.database_path = database_path
         self.database_embeddings_path = database_embeddings_path
@@ -31,6 +30,11 @@ class VoiceRecognitionSystem:
         )
 
         self.model = self.initialize_model()
+        if not os.path.exists(self.authorized_users_path):
+            os.makedirs(self.authorized_users_path, exist_ok=True)
+        if not os.path.exists(self.database_path):
+            os.makedirs(self.database_path, exist_ok=True)
+
         self.initialize_database()
 
     def initialize_model(self):
@@ -39,18 +43,7 @@ class VoiceRecognitionSystem:
         model.set_gpu(device_id)
         return model
 
-    def save_file_list(self):
-        '''saving file list to check for new files in the future'''
-        print("Saving files list")
-        files = glob(os.path.join(self.authorized_users_path, "*", "*.wav"))
-        with open(os.path.join(self.database_path, 'files.pkl'), 'wb') as f:
-            pickle.dump(files, f)
-
-    def read_file_list(self):
-        with open(os.path.join(self.database_path, 'files.pkl'), 'rb') as f:
-            return pickle.load(f)
-
-    def create_model(self):
+    def initialize_database(self) -> None:
         if self.database_embeddings_path:
             # load embeddings from file
             raise NotImplementedError
@@ -60,7 +53,7 @@ class VoiceRecognitionSystem:
             raise NotImplementedError
 
         for user_folder in tqdm(
-                os.listdir(self.authorized_users_path), desc="Initializing database"
+            os.listdir(self.authorized_users_path), desc="Initializing database"
         ):
             user_path = os.path.join(self.authorized_users_path, user_folder)
             if os.path.isdir(user_path):
@@ -72,26 +65,6 @@ class VoiceRecognitionSystem:
                 if user_audio_files:
                     first_audio_file = os.path.join(user_path, user_audio_files[0])
                     self.model.register(name=user_folder, audio_path=first_audio_file)
-            # save files list
-        self.save_file_list()
-        with open(os.path.join(self.database_path, 'model.pkl'), 'wb') as f:
-            pickle.dump(self.model, f)
-
-    def initialize_database(self) -> None:
-        files_pkl_exists = 'files.pkl' in os.listdir(self.database_path)
-        if files_pkl_exists:
-            print("reading files list")
-            files = self.read_file_list()
-            if sorted(files) == sorted(glob(os.path.join(self.authorized_users_path, "*", "*.wav"))):
-                print("files are the same, reading model")
-                with open(os.path.join(self.database_path, 'model.pkl'), 'rb') as f:
-                    self.model = pickle.load(f)
-            else:
-                print("files are different, creating model")
-                self.create_model()
-        else:
-            print("files list not found, creating model")
-            self.create_model()
 
     def verify_user(self, user_name: str, user_voice_path: str):
         if self.enable_multiple_audio_file_system:
@@ -102,7 +75,7 @@ class VoiceRecognitionSystem:
         ).values()
 
         is_access_granted = (
-                user_name == predicted_user_name and confidence >= self.acceptance_threshold
+            user_name == predicted_user_name and confidence >= self.acceptance_threshold
         )
         if self.allow_brute_force:
             system_user_names = os.listdir(self.authorized_users_path)
@@ -111,10 +84,10 @@ class VoiceRecognitionSystem:
                 system_user_names.remove(user_name)
 
             is_access_granted = (
-                    predicted_user_name in system_user_names
-                    and confidence >= self.acceptance_threshold
+                predicted_user_name in system_user_names
+                and confidence >= self.acceptance_threshold
             )
-
+            
         return is_access_granted, confidence
 
     def verify_multiple_users(self, incoming_users_path: str):
@@ -127,7 +100,7 @@ class VoiceRecognitionSystem:
         )
 
         for user_folder in tqdm(
-                os.listdir(incoming_users_path), desc="Veryfing multiple users"
+            os.listdir(incoming_users_path), desc="Veryfing multiple users"
         ):
             user_path = os.path.join(incoming_users_path, user_folder)
             if os.path.isdir(user_path):
@@ -154,10 +127,10 @@ class VoiceRecognitionSystem:
         return df_users
 
     def calculate_ROC_curve(
-            self,
-            df_users_authorized: pd.DataFrame,
-            df_users_unauthorized: pd.DataFrame,
-            roc_curve_path: str = None,
+        self,
+        df_users_authorized: pd.DataFrame,
+        df_users_unauthorized: pd.DataFrame,
+        roc_curve_path: str = None,
     ) -> Tuple[int, int, int, int]:
         """
         Function to calculate ROC curve based on DFs with authorized and unauthorized users,
@@ -183,21 +156,21 @@ class VoiceRecognitionSystem:
         second_max_value = (
             non_inf_values_sorted[1]
             if len(non_inf_values_sorted) > 1
-               and len(non_inf_values) != len(confidences.unique())
+            and len(non_inf_values) != len(confidences.unique())
             else non_inf_values_sorted[0]
         )  # get valid confidences from system
         confidences.replace(
             [np.inf], second_max_value, inplace=True
         )  # replace inf confidence with max available confidence, which is not np.inf -> system errored finding match
         probabilities = (
-                second_max_value - confidences
+            second_max_value - confidences
         )  # analyze confidences as probabilities of accepting by system
 
         acceptance_threshold_scaled = (
-                                              self.acceptance_threshold - probabilities.min()
-                                      ) / (probabilities.max() - probabilities.min())
+            self.acceptance_threshold - probabilities.min()
+        ) / (probabilities.max() - probabilities.min())
         scale_factor = (
-                0.5 / acceptance_threshold_scaled
+            0.5 / acceptance_threshold_scaled
         )  # make sure that threshold is in the middle of probabilities
         probabilities_rescaled = (probabilities - probabilities.min()) * scale_factor
 
@@ -223,13 +196,13 @@ class VoiceRecognitionSystem:
 
     @staticmethod
     def calculate_access_granted_rate(
-            df_users: pd.DataFrame,
+        df_users: pd.DataFrame,
     ) -> float:
         return df_users["is_access_granted"].sum() / len(df_users)
 
     @staticmethod
     def calculate_far_frr(
-            df_users_authorized: pd.DataFrame, df_users_unauthorized: pd.DataFrame
+        df_users_authorized: pd.DataFrame, df_users_unauthorized: pd.DataFrame
     ) -> Tuple[float, float]:
         """
         Function to calculate False Acceptance Rate, False Rejection Rate
